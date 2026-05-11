@@ -135,6 +135,25 @@ h1 {
   align-items: center;
   gap: 6px;
   color: #1e1b4b;
+  cursor: text;
+}
+
+.title:hover {
+  color: #6366f1;
+}
+
+.title-input {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e1b4b;
+  border: none;
+  border-bottom: 1.5px solid #6366f1;
+  outline: none;
+  background: transparent;
+  padding: 0 0 1px;
+  width: 100%;
+  line-height: 1.4;
 }
 
 .sdot {

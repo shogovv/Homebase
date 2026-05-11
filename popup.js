@@ -15,7 +15,7 @@ const i18n = {
     step3: 'リロード（<strong>⌘R</strong>）すると固定URLに戻る',
     step4: '<strong>「更新」</strong> ボタンで、現在のURLを新しい固定URLに変更できる',
     step5: '<strong>「解除」</strong> ボタンで、そのタブの固定URLを解除できる',
-    helpTip: '<strong>💡 Tips:</strong> ピン留めを外すと固定URLも自動削除されます。ブラウザを再起動しても固定URLは保持されます。',
+    helpTip: '<strong>💡 Tips:</strong> ピン留めを外すと固定URLも自動削除されます。ブラウザを再起動しても固定URLは保持されます。タブ名はクリックで編集できます。',
     update: '更新',
     fix: '固定',
     remove: '解除',
@@ -33,7 +33,7 @@ const i18n = {
     step3: 'Reload (<strong>⌘R</strong>) to return to the fixed URL',
     step4: 'Press <strong>"Update"</strong> to set the current URL as the new fixed URL',
     step5: 'Press <strong>"Remove"</strong> to unpin the fixed URL',
-    helpTip: '<strong>💡 Tips:</strong> Unpinning a tab also removes its fixed URL. Fixed URLs are preserved across browser restarts.',
+    helpTip: '<strong>💡 Tips:</strong> Unpinning a tab also removes its fixed URL. Fixed URLs are preserved across browser restarts. Click tab names to edit.',
     update: 'Update',
     fix: 'Pin',
     remove: 'Remove',
@@ -128,9 +128,10 @@ function buildHelp() {
 // --- Main render ---
 
 async function render() {
-  const [pinnedMap, pinnedTabs] = await Promise.all([
+  const [pinnedMap, pinnedTabs, tabNames] = await Promise.all([
     sendMessage({ type: 'GET_PINNED_MAP' }),
     chrome.tabs.query({ pinned: true }),
+    sendMessage({ type: 'GET_TAB_NAMES' }),
   ]);
 
   countEl.textContent = pinnedTabs.length > 0 ? `${pinnedTabs.length} ${t('pinned')}` : '';
@@ -155,6 +156,7 @@ async function render() {
   for (const tab of pinnedTabs) {
     const fixedUrl = pinnedMap[String(tab.id)];
     const currentUrl = tab.url || '';
+    const customName = tabNames[String(tab.id)] || '';
 
     let dotClass = 'gray';
     if (fixedUrl && currentUrl === fixedUrl) dotClass = 'green';
@@ -168,10 +170,10 @@ async function render() {
     if (tab.favIconUrl) {
       const img = document.createElement('img');
       img.src = tab.favIconUrl;
-      img.onerror = () => { fav.textContent = getInitial(tab.title, currentUrl); };
+      img.onerror = () => { fav.textContent = getInitial(customName || tab.title, currentUrl); };
       fav.appendChild(img);
     } else {
-      fav.textContent = getInitial(tab.title, currentUrl);
+      fav.textContent = getInitial(customName || tab.title, currentUrl);
     }
 
     const info = document.createElement('div');
@@ -181,7 +183,33 @@ async function render() {
     titleEl.className = 'title';
     titleEl.title = tab.title || '';
     titleEl.innerHTML = `<span class="sdot ${dotClass}"></span>`;
-    titleEl.appendChild(document.createTextNode(tab.title || t('noTitle')));
+    const titleText = document.createTextNode(customName || tab.title || t('noTitle'));
+    titleEl.appendChild(titleText);
+
+    titleEl.addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'title-input';
+      input.value = customName || tab.title || '';
+      input.placeholder = tab.title || t('noTitle');
+
+      const commit = async () => {
+        const newName = input.value.trim();
+        const nameToSave = (newName && newName !== tab.title) ? newName : '';
+        await sendMessage({ type: 'UPDATE_TAB_NAME', tabId: tab.id, name: nameToSave });
+        await render();
+      };
+
+      input.addEventListener('blur', commit);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') input.blur();
+        if (e.key === 'Escape') { input.removeEventListener('blur', commit); render(); }
+      });
+
+      info.replaceChild(input, titleEl);
+      input.focus();
+      input.select();
+    });
 
     info.appendChild(titleEl);
 
