@@ -65,14 +65,13 @@ async function sendMessage(message) {
   return chrome.runtime.sendMessage(message);
 }
 
-function truncateUrl(url, max = 48) {
+function displayUrl(url) {
   if (!url) return '';
   try {
     const u = new URL(url);
-    const display = u.hostname + (u.pathname !== '/' ? u.pathname : '');
-    return display.length > max ? display.slice(0, max) + '…' : display;
+    return u.hostname + (u.pathname !== '/' ? u.pathname : '') + u.search;
   } catch {
-    return url.length > max ? url.slice(0, max) + '…' : url;
+    return url;
   }
 }
 
@@ -184,13 +183,7 @@ async function render() {
     titleEl.innerHTML = `<span class="sdot ${dotClass}"></span>`;
     titleEl.appendChild(document.createTextNode(tab.title || t('noTitle')));
 
-    const urlEl = document.createElement('div');
-    urlEl.className = 'url';
-    urlEl.title = fixedUrl || currentUrl;
-    urlEl.textContent = fixedUrl ? truncateUrl(fixedUrl) : truncateUrl(currentUrl);
-
     info.appendChild(titleEl);
-    info.appendChild(urlEl);
 
     const acts = document.createElement('div');
     acts.className = 'acts';
@@ -221,9 +214,14 @@ async function render() {
       acts.appendChild(btnRemove);
     }
 
+    const urlEl = document.createElement('div');
+    urlEl.className = 'url';
+    urlEl.textContent = displayUrl(fixedUrl || currentUrl);
+
     row.appendChild(fav);
     row.appendChild(info);
     row.appendChild(acts);
+    row.appendChild(urlEl);
     list.appendChild(row);
   }
 
