@@ -139,13 +139,13 @@ function drawIcon(px, size) {
   const br = 0;
   fillRoundedRectGrad(px, size, pad, br);
 
-  // Home plate pentagon (baseball home base)
+  // Home plate pentagon (baseball home base) — float coords for perfect symmetry
   const cx = size / 2;
-  const top    = Math.round(2.5 * s);
-  const bottom = Math.round(13.5 * s);
-  const mid    = Math.round(9.5 * s);
-  const left   = Math.round(3.5 * s);
-  const right  = Math.round(12.5 * s);
+  const top    = 2.5 * s;
+  const bottom = 13.5 * s;
+  const mid    = 9.5 * s;
+  const left   = 3.5 * s;
+  const right  = 12.5 * s;
   fillPoly(px, size, [
     [left,  top],
     [right, top],
