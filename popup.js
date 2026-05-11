@@ -1,6 +1,6 @@
 const root = document.getElementById('root');
 const countEl = document.getElementById('count');
-const langBtn = document.getElementById('lang-btn');
+const langSwitch = document.getElementById('lang-switch');
 
 // --- i18n ---
 
@@ -19,9 +19,9 @@ const i18n = {
     update: '更新',
     fix: '固定',
     remove: '解除',
+    goHome: '戻る',
     alreadyFixed: 'すでに現在のURLが固定されています',
     noTitle: '(タイトルなし)',
-    langLabel: 'EN',
   },
   en: {
     pinned: 'pinned',
@@ -37,9 +37,9 @@ const i18n = {
     update: 'Update',
     fix: 'Pin',
     remove: 'Remove',
+    goHome: 'Go home',
     alreadyFixed: 'Already pinned to current URL',
     noTitle: '(No title)',
-    langLabel: '日本語',
   },
 };
 
@@ -57,6 +57,12 @@ async function loadLang() {
 async function setLang(lang) {
   currentLang = lang;
   await chrome.storage.local.set({ lang });
+}
+
+function updateLangButtons() {
+  langSwitch.querySelectorAll('.lang-opt').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.lang === currentLang);
+  });
 }
 
 // --- Helpers ---
@@ -135,7 +141,7 @@ async function render() {
   ]);
 
   countEl.textContent = pinnedTabs.length > 0 ? `${pinnedTabs.length} ${t('pinned')}` : '';
-  langBtn.textContent = t('langLabel');
+  updateLangButtons();
 
   root.innerHTML = '';
 
@@ -165,6 +171,7 @@ async function render() {
     const row = document.createElement('div');
     row.className = 'row';
 
+    // Favicon
     const fav = document.createElement('div');
     fav.className = 'fav';
     if (tab.favIconUrl) {
@@ -176,6 +183,7 @@ async function render() {
       fav.textContent = getInitial(customName || tab.title, currentUrl);
     }
 
+    // Info (upper line: dot + title)
     const info = document.createElement('div');
     info.className = 'info';
 
@@ -213,11 +221,25 @@ async function render() {
 
     info.appendChild(titleEl);
 
+    // Actions
     const acts = document.createElement('div');
     acts.className = 'acts';
 
     const btnLabel = fixedUrl ? t('update') : t('fix');
     const isAlreadyFixed = fixedUrl && currentUrl === fixedUrl;
+
+    if (fixedUrl) {
+      const btnHome = document.createElement('button');
+      btnHome.className = 'btn-h';
+      btnHome.textContent = t('goHome');
+      btnHome.disabled = currentUrl === fixedUrl;
+      btnHome.addEventListener('click', async () => {
+        btnHome.disabled = true;
+        await chrome.tabs.update(tab.id, { url: fixedUrl });
+        setTimeout(render, 300);
+      });
+      acts.appendChild(btnHome);
+    }
 
     const btnUpdate = document.createElement('button');
     btnUpdate.className = 'btn-p';
@@ -242,6 +264,7 @@ async function render() {
       acts.appendChild(btnRemove);
     }
 
+    // URL (lower line: full-width)
     const urlEl = document.createElement('div');
     urlEl.className = 'url';
     urlEl.textContent = displayUrl(fixedUrl || currentUrl);
@@ -262,8 +285,10 @@ async function render() {
 
 // --- Language toggle ---
 
-langBtn.addEventListener('click', async () => {
-  await setLang(currentLang === 'ja' ? 'en' : 'ja');
+langSwitch.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.lang-opt');
+  if (!btn || btn.dataset.lang === currentLang) return;
+  await setLang(btn.dataset.lang);
   await render();
 });
 

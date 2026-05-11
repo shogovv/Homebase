@@ -44,23 +44,40 @@ h1 {
   color: rgba(255, 255, 255, 0.7);
 }
 
-.lang-btn {
+/* ── Language segment control ── */
+.lang-switch {
+  display: flex;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  flex-shrink: 0;
+}
+
+.lang-opt {
+  font-family: inherit;
   font-size: 10px;
   font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
+  padding: 2px 8px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
   transition: all 0.15s;
-  flex-shrink: 0;
   line-height: 1.4;
 }
 
-.lang-btn:hover {
+.lang-opt + .lang-opt {
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.lang-opt.active {
   background: rgba(255, 255, 255, 0.25);
-  border-color: rgba(255, 255, 255, 0.6);
+  color: #fff;
+}
+
+.lang-opt:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* ── Empty state ── */
@@ -210,6 +227,23 @@ button {
 .btn-p:disabled {
   background: #c7d2fe;
   border-color: #c7d2fe;
+  cursor: default;
+}
+
+.btn-h {
+  background: transparent;
+  color: #6366f1;
+  border-color: #c7d2fe;
+}
+
+.btn-h:hover {
+  background: #eef2ff;
+  border-color: #818cf8;
+}
+
+.btn-h:disabled {
+  color: #c7d2fe;
+  border-color: #e5e7eb;
   cursor: default;
 }
 
